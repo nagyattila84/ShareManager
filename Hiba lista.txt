@@ -1,0 +1,2 @@
+Ablakok többszöri megnyitása
++ hozzáadás után nem frissül a combobox
