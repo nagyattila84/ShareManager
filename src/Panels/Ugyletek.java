@@ -57,7 +57,7 @@ public class Ugyletek extends Panel {
         lbValue1.setText(String.format("%1$,.2f", x));
         if (!lbCurrency1.getText().equals("HUF")) {
             x *= Double.parseDouble(spCurrencyPrice.getValue().toString());
-            lbValue2.setText(String.format("%1$,.2f", x));
+            lbValue2.setText(String.format("%1$,.0f", x));
             megjelenit(true);
         } else {
             megjelenit(false);

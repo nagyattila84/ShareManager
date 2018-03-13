@@ -421,8 +421,10 @@ public class DB {
      * @param table - JTable - a JTable, ahová betölti az adatokat
      * @param account - String - a számla (Mind esetén nem szűr rá)
      * @param share - String - a értékpapír (Mind esetén nem szűr rá)
+     * @param d1 - String - dátumtól
+     * @param d2 - String - dátumig
      */
-    public void sqlLekerdezKimutatas(JTable table, String account, String share) {
+    public void sqlLekerdezKimutatas(JTable table, String account, String share, String d1, String d2) {
         DefaultTableModel tm = (DefaultTableModel)table.getModel();
         
         String s = "SELECT ugylet_id, ertekpapirok.ticker, szamlak.nev, mennyiseg, arfolyam, datum, jutalek, dev_arfolyam FROM ugyletek " +
@@ -434,9 +436,14 @@ public class DB {
         }
         
         if (!share.equals("Mind")) {
-            s += " WHERE ertekpapirok.ticker = '" + share + "'";
+            s += " AND ertekpapirok.ticker = '" + share + "'";
         }
-         
+        
+        if (!d1.equals("Mind")) {
+            s += " AND datum >= '" + d1 + "'";
+            s += " AND datum <= '" + d2 + "'";
+        }
+        
         try (Connection kapcs = DriverManager.getConnection(Config.DBURL, Config.USER, Config.PASS);
                 PreparedStatement parancs = kapcs.prepareStatement(s);
                 ResultSet eredmeny = parancs.executeQuery()){

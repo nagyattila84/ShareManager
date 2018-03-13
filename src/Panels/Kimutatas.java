@@ -7,6 +7,7 @@ package Panels;
 
 import ShareManager.Config;
 import ShareManager.DB;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
@@ -20,7 +21,8 @@ import javax.swing.event.ListSelectionListener;
 public class Kimutatas extends Panel {
     ListSelectionModel selectionModel;
     ArrayList<TickerStock> listOfTickerStock;
-    
+    boolean filterFlag = false; //a szűrőknél kapcsolja a táblázat frissítését
+    int x; //frissítés paramétere
     
     /**
      * Egy ügylet (értékpapír) adatai nyereség számításhoz (FIFO) módszerrel
@@ -120,16 +122,26 @@ public class Kimutatas extends Panel {
     public Kimutatas() {
         initComponents();
         
-//        Config.addColumnAndAllToCBX(cbxAccount, tbKimutatas, 1);
+        DB db = new DB();
+        db.sqlLekerdezKimutatas(tbKimutatas, "Mind", "Mind", "Mind", "Mind");
+        nyeresegszamitas();
+        Config.addColumnAndAllToCBX(cbxAccount, tbKimutatas, 1);
         Config.addColumnAndAllToCBX(cbxShare, tbKimutatas, 3);
-        frissites();
+        filterFlag = true;
         
         setTableListener();  
     }
 
+    /**
+     * Kitölti a kimutatás számolandó (HUF érték, nyereség/veszteség) értékeit és összegzi azt
+     */
     private void nyeresegszamitas(){
         listOfTickerStock = new ArrayList<>();
         TickerStock ts;
+        int totalProfit = 0;
+        int totalCommision = 0;
+        int tax = 0;
+        
         for (int i=0; i<tbKimutatas.getRowCount(); i++){
             ts = getTickerStockFromList(tbKimutatas.getValueAt(i, 3).toString());
             int profit = 0;
@@ -147,16 +159,30 @@ public class Kimutatas extends Panel {
                 profit = ts.sell(new Ticker(-q, p,cp));
             }
             tbKimutatas.setValueAt(""+profit, i, 10);
+            totalProfit += profit;
+            totalCommision += comHUF;
         }
+        lbBrtNyereseg.setText(String.format("%1$,d", totalProfit));
+        lbKoltseg.setText(String.format("%1$,d", totalCommision));
+        totalProfit -= totalCommision;
+        lbNettoNyereseg.setText(String.format("%1$,d", totalProfit));
     }
     
     @Override
     public void frissites(){
+        String s1 = cbxAccount.getSelectedItem().toString();
+        String s2 = cbxShare.getSelectedItem().toString();
+        String d1 = "Mind";
+        String d2 = "Mind";
+        if (chbPeriod.isSelected()) {
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+            d1 = sdf.format(spDate1.getValue());
+            d2 = sdf.format(spDate2.getValue());
+        }
+
         DB db = new DB();
-        
-        db.sqlLekerdezKimutatas(tbKimutatas, "Mind", cbxShare.getSelectedItem().toString());
+        db.sqlLekerdezKimutatas(tbKimutatas, s1, s2, d1, d2);
         nyeresegszamitas();
-        
     }
     
     /**
@@ -210,15 +236,21 @@ public class Kimutatas extends Panel {
         tbKimutatas = new javax.swing.JTable();
         jLabel4 = new javax.swing.JLabel();
         jPanel1 = new javax.swing.JPanel();
-        cbxYear = new javax.swing.JComboBox<>();
-        rbtYear = new javax.swing.JRadioButton();
-        rbtPeriod = new javax.swing.JRadioButton();
-        spPeriodBegin = new javax.swing.JSpinner();
-        spPeriodEnd = new javax.swing.JSpinner();
         jLabel1 = new javax.swing.JLabel();
         jLabel2 = new javax.swing.JLabel();
         cbxAccount = new javax.swing.JComboBox<>();
         cbxShare = new javax.swing.JComboBox<>();
+        chbPeriod = new javax.swing.JCheckBox();
+        spDate2 = new javax.swing.JSpinner();
+        spDate1 = new javax.swing.JSpinner();
+        jLabel3 = new javax.swing.JLabel();
+        jLabel5 = new javax.swing.JLabel();
+        jLabel6 = new javax.swing.JLabel();
+        jLabel7 = new javax.swing.JLabel();
+        jLabel8 = new javax.swing.JLabel();
+        lbBrtNyereseg = new javax.swing.JLabel();
+        lbKoltseg = new javax.swing.JLabel();
+        lbNettoNyereseg = new javax.swing.JLabel();
 
         setMinimumSize(new java.awt.Dimension(780, 560));
         setPreferredSize(new java.awt.Dimension(780, 530));
@@ -261,15 +293,6 @@ public class Kimutatas extends Panel {
 
         jPanel1.setBorder(javax.swing.BorderFactory.createTitledBorder("Szűrők"));
 
-        cbxYear.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Mind" }));
-
-        buttonGroup1.add(rbtYear);
-        rbtYear.setSelected(true);
-        rbtYear.setText("Év");
-
-        buttonGroup1.add(rbtPeriod);
-        rbtPeriod.setText("Időszak");
-
         jLabel1.setText("Számla");
 
         jLabel2.setText("Értékpapír");
@@ -288,32 +311,57 @@ public class Kimutatas extends Panel {
             }
         });
 
+        chbPeriod.setText("Időszak");
+        chbPeriod.addChangeListener(new javax.swing.event.ChangeListener() {
+            public void stateChanged(javax.swing.event.ChangeEvent evt) {
+                chbPeriodStateChanged(evt);
+            }
+        });
+
+        spDate2.setModel(new javax.swing.SpinnerDateModel(new java.util.Date(), null, null, java.util.Calendar.DAY_OF_WEEK));
+        spDate2.setEditor(new javax.swing.JSpinner.DateEditor(spDate2, "yyyy-MM-dd"));
+        spDate2.addChangeListener(new javax.swing.event.ChangeListener() {
+            public void stateChanged(javax.swing.event.ChangeEvent evt) {
+                spDate2StateChanged(evt);
+            }
+        });
+
+        spDate1.setModel(new javax.swing.SpinnerDateModel(new java.util.Date(1514841960000L), null, null, java.util.Calendar.DAY_OF_WEEK));
+        spDate1.setEditor(new javax.swing.JSpinner.DateEditor(spDate1, "yyyy-MM-dd"));
+        spDate1.addChangeListener(new javax.swing.event.ChangeListener() {
+            public void stateChanged(javax.swing.event.ChangeEvent evt) {
+                spDate1StateChanged(evt);
+            }
+        });
+
+        jLabel3.setText("-tól");
+
+        jLabel5.setText("-ig");
+
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jLabel1)
-                    .addComponent(rbtYear))
-                .addGap(18, 18, 18)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(cbxYear, javax.swing.GroupLayout.PREFERRED_SIZE, 92, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(cbxAccount, javax.swing.GroupLayout.PREFERRED_SIZE, 92, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(31, 31, 31)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addComponent(rbtPeriod)
-                        .addGap(18, 18, 18)
-                        .addComponent(spPeriodBegin, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(18, 18, 18)
-                        .addComponent(spPeriodEnd, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addComponent(jLabel2)
-                        .addGap(18, 18, 18)
-                        .addComponent(cbxShare, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
-                .addGap(425, 425, 425))
+                .addComponent(jLabel1)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(cbxAccount, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(jLabel2)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(cbxShare, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(chbPeriod)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(spDate1, javax.swing.GroupLayout.PREFERRED_SIZE, 97, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jLabel3)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(spDate2, javax.swing.GroupLayout.PREFERRED_SIZE, 97, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jLabel5)
+                .addContainerGap())
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -323,26 +371,53 @@ public class Kimutatas extends Panel {
                     .addComponent(jLabel1)
                     .addComponent(jLabel2)
                     .addComponent(cbxAccount, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(cbxShare, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(rbtPeriod)
-                    .addComponent(spPeriodBegin, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(spPeriodEnd, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(rbtYear)
-                    .addComponent(cbxYear, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                    .addComponent(cbxShare, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(chbPeriod)
+                    .addComponent(spDate2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(spDate1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel5)
+                    .addComponent(jLabel3))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
+
+        jLabel6.setText("Bruttó nyereség");
+
+        jLabel7.setText("Költség");
+
+        jLabel8.setText("Nettó nyereség");
+
+        lbBrtNyereseg.setText("jLabel9");
+
+        lbKoltseg.setText("jLabel9");
+
+        lbNettoNyereseg.setText("jLabel9");
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addGap(10, 10, 10)
-                .addComponent(jLabel4, javax.swing.GroupLayout.PREFERRED_SIZE, 760, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
             .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
             .addComponent(jScrollPane1)
+            .addGroup(layout.createSequentialGroup()
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(layout.createSequentialGroup()
+                        .addGap(10, 10, 10)
+                        .addComponent(jLabel4, javax.swing.GroupLayout.PREFERRED_SIZE, 760, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(0, 0, Short.MAX_VALUE))
+                    .addGroup(layout.createSequentialGroup()
+                        .addContainerGap()
+                        .addComponent(jLabel6)
+                        .addGap(18, 18, 18)
+                        .addComponent(lbBrtNyereseg)
+                        .addGap(198, 198, 198)
+                        .addComponent(jLabel7)
+                        .addGap(21, 21, 21)
+                        .addComponent(lbKoltseg)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(jLabel8)
+                        .addGap(21, 21, 21)
+                        .addComponent(lbNettoNyereseg)))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -352,36 +427,64 @@ public class Kimutatas extends Panel {
                 .addGap(1, 1, 1)
                 .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 366, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(79, 79, 79))
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 375, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(18, 18, 18)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel6)
+                    .addComponent(lbBrtNyereseg)
+                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(jLabel7)
+                        .addComponent(lbKoltseg)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(jLabel8)
+                            .addComponent(lbNettoNyereseg))))
+                .addGap(55, 55, 55))
         );
     }// </editor-fold>//GEN-END:initComponents
 
     private void cbxAccountItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_cbxAccountItemStateChanged
         
-        frissites();
+        if (filterFlag) frissites();
     }//GEN-LAST:event_cbxAccountItemStateChanged
 
     private void cbxShareItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_cbxShareItemStateChanged
 
-        frissites();
+        if (filterFlag) frissites();
     }//GEN-LAST:event_cbxShareItemStateChanged
+
+    private void chbPeriodStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_chbPeriodStateChanged
+        frissites();
+    }//GEN-LAST:event_chbPeriodStateChanged
+
+    private void spDate1StateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_spDate1StateChanged
+        frissites();
+    }//GEN-LAST:event_spDate1StateChanged
+
+    private void spDate2StateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_spDate2StateChanged
+         frissites();
+    }//GEN-LAST:event_spDate2StateChanged
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.ButtonGroup buttonGroup1;
     private javax.swing.JComboBox<String> cbxAccount;
     private javax.swing.JComboBox<String> cbxShare;
-    private javax.swing.JComboBox<String> cbxYear;
+    private javax.swing.JCheckBox chbPeriod;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
+    private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
+    private javax.swing.JLabel jLabel5;
+    private javax.swing.JLabel jLabel6;
+    private javax.swing.JLabel jLabel7;
+    private javax.swing.JLabel jLabel8;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JScrollPane jScrollPane1;
-    private javax.swing.JRadioButton rbtPeriod;
-    private javax.swing.JRadioButton rbtYear;
-    private javax.swing.JSpinner spPeriodBegin;
-    private javax.swing.JSpinner spPeriodEnd;
+    private javax.swing.JLabel lbBrtNyereseg;
+    private javax.swing.JLabel lbKoltseg;
+    private javax.swing.JLabel lbNettoNyereseg;
+    private javax.swing.JSpinner spDate1;
+    private javax.swing.JSpinner spDate2;
     private javax.swing.JTable tbKimutatas;
     // End of variables declaration//GEN-END:variables
 }

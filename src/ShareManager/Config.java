@@ -5,6 +5,8 @@
  */
 package ShareManager;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import javax.swing.JComboBox;
 import javax.swing.JTable;
 
@@ -39,9 +41,20 @@ public class Config {
     public static void addColumnAndAllToCBX(JComboBox cbx, JTable t, int c) {
         cbx.removeAllItems();
         cbx.addItem("Mind");
+        ArrayList<String> list = new ArrayList<>();
         for (int i=0; i<t.getRowCount(); i++) {
-            cbx.addItem(t.getValueAt(i, c));
-        }  
+            list.add(t.getValueAt(i, c).toString());
+        }
+        Collections.sort(list);
+        int i = 0;
+        cbx.addItem(list.get(0));
+        while (i<list.size()-1){
+            if (list.get(i).equals(list.get(i+1))) list.remove(i+1);
+            else {
+                cbx.addItem(list.get(i+1));
+                i++;
+            }
+        }
     }
     
     /**
