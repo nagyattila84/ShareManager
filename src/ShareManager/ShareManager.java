@@ -5,13 +5,17 @@
  */
 package ShareManager;
 
-import java.time.LocalDateTime;
+import Panels.Ertekpapirok;
+import Panels.Kimutatas;
+import Panels.Panel;
+import Panels.Penznemek;
+import Panels.Szamlak;
+import Panels.Tipusok;
+import Panels.Tozsdek;
+import Panels.Ugyletek;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import javax.swing.JFrame;
-import javax.swing.JOptionPane;
-import javax.swing.ListSelectionModel;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
-import javax.swing.table.DefaultTableModel;
 
 /**
  * @author opossum
@@ -19,14 +23,16 @@ import javax.swing.table.DefaultTableModel;
  */
 public class ShareManager extends javax.swing.JFrame {
 
-    static ShareManager mainWindow;
-    static String user;
-    int currentTable = 1;
-    ListSelectionModel selectionModel;
+    public static ShareManager mainWindow;
     
-    DB db = new DB();
-    
-    String date = LocalDateTime.now().toString().substring(0, 10);
+    GridBagLayout layout = new GridBagLayout();
+    Panel tozsdek;
+    Panel penznemek;
+    Panel ertekpapirok;
+    Panel tipusok;
+    Panel szamlak;
+    Panel ugyletek;
+    Panel kimutatas;
     
     /**
      * Creates new form MainWindow
@@ -35,44 +41,39 @@ public class ShareManager extends javax.swing.JFrame {
         initComponents();
         if (Config.FullScreen) this.setExtendedState(this.getExtendedState() | JFrame.MAXIMIZED_BOTH);      
         
-        setTableSelctionModel();
-        tablazatFrissites();
-        setVisible(true);
+        tozsdek = new Tozsdek();
+        penznemek = new Penznemek();
+        tipusok = new Tipusok();
+        szamlak = new Szamlak();
+        ertekpapirok = new Ertekpapirok();
+        ugyletek = new Ugyletek();
+        kimutatas = new Kimutatas();
+        dynamicPanel.setLayout(layout);
+        GridBagConstraints c = new GridBagConstraints();
+        c.gridx = 0;
+        c.gridy = 0;
+        dynamicPanel.add(tozsdek, c);
+        dynamicPanel.add(penznemek, c);
+        dynamicPanel.add(ertekpapirok, c);
+        dynamicPanel.add(tipusok, c);
+        dynamicPanel.add(szamlak, c);
+        dynamicPanel.add(ugyletek, c);
+        dynamicPanel.add(kimutatas, c);
+        setDynamicPanel(null);
     }
     
-    public DefaultTableModel getTableDefaultModel(){
-        return (DefaultTableModel)table.getModel();
-    }
-    
-    /*
-    *Beállítja a Selection modelt, így csak akkor elérhető a módosító és törlő gomb, ha ki van jelölve egy sor
-    */
-    private void setTableSelctionModel(){
-        selectionModel = table.getSelectionModel();
-        selectionModel.addListSelectionListener(new ListSelectionListener() {
-            @Override
-            public void valueChanged(ListSelectionEvent lse) {
-                if (!selectionModel.isSelectionEmpty()) {
-                    btChangeRecord.setEnabled(true);
-                    btDeleteRecord.setEnabled(true);
-                } else {
-                    btChangeRecord.setEnabled(false);
-                    btDeleteRecord.setEnabled(false);
-                }
-            }
-        });
-    }
-    
-    /**
-     * A megadott paraméter alapján létrehozza, frissíti a táblázatot.
-     * @param t a ShareManager.tables tömb egy sorszáma
-     */
-    public void tablazatFrissites() {
-        lbTableName.setText(Config.tablesNameForm[currentTable]);
-        try {
-            db.sqlBeolvasTablat(table, currentTable);
-        } catch (ArrayIndexOutOfBoundsException ex) {
-            JOptionPane.showMessageDialog(this,"A hivatkozott tábla nem szerepel a table tömbben","Hiba",JOptionPane.ERROR_MESSAGE);
+    private void setDynamicPanel(Panel p) {
+        tozsdek.setVisible(false);
+        penznemek.setVisible(false);
+        ertekpapirok.setVisible(false);
+        tipusok.setVisible(false);
+        szamlak.setVisible(false);
+        ugyletek.setVisible(false);
+        kimutatas.setVisible(false);
+  
+        if (p!=null) {
+            p.frissites();
+            p.setVisible(true);
         }
     }
     
@@ -85,309 +86,168 @@ public class ShareManager extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        jLabel2 = new javax.swing.JLabel();
-        panMenu = new javax.swing.JPanel();
-        jLabel3 = new javax.swing.JLabel();
-        btPosition = new javax.swing.JButton();
-        btExchange = new javax.swing.JButton();
-        btCurrency = new javax.swing.JButton();
-        btShare = new javax.swing.JButton();
-        btAccount = new javax.swing.JButton();
-        btType = new javax.swing.JButton();
-        jScrollPane1 = new javax.swing.JScrollPane();
-        table = new javax.swing.JTable();
-        lbTableName = new javax.swing.JLabel();
-        btAddNewRecord = new javax.swing.JButton();
-        btChangeRecord = new javax.swing.JButton();
-        btDeleteRecord = new javax.swing.JButton();
-        btRefresh = new javax.swing.JButton();
-
-        jLabel2.setText("jLabel2");
+        dynamicPanel = new javax.swing.JPanel();
+        menu = new javax.swing.JMenuBar();
+        mUgyletek = new javax.swing.JMenu();
+        jMenuItem1 = new javax.swing.JMenuItem();
+        jMenuItem2 = new javax.swing.JMenuItem();
+        mTorzsadatok = new javax.swing.JMenu();
+        miTozsdek = new javax.swing.JMenuItem();
+        miErtekpapirok = new javax.swing.JMenuItem();
+        miTipusok = new javax.swing.JMenuItem();
+        miPenznemek = new javax.swing.JMenuItem();
+        miSzamlak = new javax.swing.JMenuItem();
+        mBeallitasok = new javax.swing.JMenu();
+        jMenuItem3 = new javax.swing.JMenuItem();
+        jMenuItem4 = new javax.swing.JMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Share Manager");
+        setMinimumSize(new java.awt.Dimension(800, 620));
         setSize(new java.awt.Dimension(800, 600));
 
-        panMenu.setBorder(javax.swing.BorderFactory.createEtchedBorder());
-        panMenu.setMaximumSize(new java.awt.Dimension(100, 600));
-        panMenu.setPreferredSize(new java.awt.Dimension(100, 600));
-        panMenu.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
+        javax.swing.GroupLayout dynamicPanelLayout = new javax.swing.GroupLayout(dynamicPanel);
+        dynamicPanel.setLayout(dynamicPanelLayout);
+        dynamicPanelLayout.setHorizontalGroup(
+            dynamicPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 780, Short.MAX_VALUE)
+        );
+        dynamicPanelLayout.setVerticalGroup(
+            dynamicPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 608, Short.MAX_VALUE)
+        );
 
-        jLabel3.setFont(new java.awt.Font("Ubuntu", 1, 18)); // NOI18N
-        jLabel3.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        jLabel3.setText("Menü");
-        panMenu.add(jLabel3, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 10, 130, -1));
+        mUgyletek.setMnemonic('K');
+        mUgyletek.setText("Kereskedés");
 
-        btPosition.setText("Ügyletek");
-        btPosition.setName(""); // NOI18N
-        btPosition.addActionListener(new java.awt.event.ActionListener() {
+        jMenuItem1.setMnemonic('\u00fc');
+        jMenuItem1.setText("Ügyletek");
+        jMenuItem1.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btPositionActionPerformed(evt);
+                jMenuItem1ActionPerformed(evt);
             }
         });
-        panMenu.add(btPosition, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 50, 130, -1));
-        btPosition.getAccessibleContext().setAccessibleName("ugyletek");
+        mUgyletek.add(jMenuItem1);
 
-        btExchange.setText("Tőzsdék");
-        btExchange.setName("tozsdek"); // NOI18N
-        btExchange.addActionListener(new java.awt.event.ActionListener() {
+        jMenuItem2.setMnemonic('k');
+        jMenuItem2.setText("Kimutatások");
+        jMenuItem2.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btExchangeActionPerformed(evt);
+                jMenuItem2ActionPerformed(evt);
             }
         });
-        panMenu.add(btExchange, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 170, 130, -1));
+        mUgyletek.add(jMenuItem2);
 
-        btCurrency.setText("Devizák");
-        btCurrency.setName("penznemek"); // NOI18N
-        btCurrency.addActionListener(new java.awt.event.ActionListener() {
+        menu.add(mUgyletek);
+
+        mTorzsadatok.setMnemonic('t');
+        mTorzsadatok.setText("Törzsadatok");
+        mTorzsadatok.setToolTipText("");
+
+        miTozsdek.setText("Tőzsdék");
+        miTozsdek.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btCurrencyActionPerformed(evt);
+                miTozsdekActionPerformed(evt);
             }
         });
-        panMenu.add(btCurrency, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 130, 130, -1));
+        mTorzsadatok.add(miTozsdek);
 
-        btShare.setText("Értékpapírok");
-        btShare.setName(""); // NOI18N
-        btShare.addActionListener(new java.awt.event.ActionListener() {
+        miErtekpapirok.setText("Értékpapírok");
+        miErtekpapirok.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btShareActionPerformed(evt);
+                miErtekpapirokActionPerformed(evt);
             }
         });
-        panMenu.add(btShare, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 90, 130, -1));
-        btShare.getAccessibleContext().setAccessibleName("ertekpapirok");
+        mTorzsadatok.add(miErtekpapirok);
 
-        btAccount.setText("Számlák");
-        btAccount.setName("szamlak"); // NOI18N
-        btAccount.addActionListener(new java.awt.event.ActionListener() {
+        miTipusok.setText("Típusok");
+        miTipusok.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btAccountActionPerformed(evt);
+                miTipusokActionPerformed(evt);
             }
         });
-        panMenu.add(btAccount, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 250, 130, -1));
+        mTorzsadatok.add(miTipusok);
 
-        btType.setText("Értékpapír típusok");
-        btType.setName("ertekpapir_tipusok"); // NOI18N
-        btType.addActionListener(new java.awt.event.ActionListener() {
+        miPenznemek.setText("Pénznemek");
+        miPenznemek.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btTypeActionPerformed(evt);
+                miPenznemekActionPerformed(evt);
             }
         });
-        panMenu.add(btType, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 210, 130, -1));
+        mTorzsadatok.add(miPenznemek);
 
-        table.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
-
-            },
-            new String [] {
-                "Title 1", "Title 2", "null", "null", "null", "null", "null", "null", "null", "null"
-            }
-        ) {
-            boolean[] canEdit = new boolean [] {
-                false, false, false, false, false, false, false, false, false, false
-            };
-
-            public boolean isCellEditable(int rowIndex, int columnIndex) {
-                return canEdit [columnIndex];
-            }
-        });
-        table.setAutoResizeMode(javax.swing.JTable.AUTO_RESIZE_ALL_COLUMNS);
-        jScrollPane1.setViewportView(table);
-        if (table.getColumnModel().getColumnCount() > 0) {
-            table.getColumnModel().getColumn(0).setPreferredWidth(30);
-        }
-
-        lbTableName.setFont(new java.awt.Font("Ubuntu", 1, 18)); // NOI18N
-        lbTableName.setText("Táblázat");
-
-        btAddNewRecord.setIcon(new javax.swing.ImageIcon(getClass().getResource("/Images/add.png"))); // NOI18N
-        btAddNewRecord.setToolTipText("Új hozzáadása");
-        btAddNewRecord.addActionListener(new java.awt.event.ActionListener() {
+        miSzamlak.setText("Számlák");
+        miSzamlak.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btAddNewRecordActionPerformed(evt);
+                miSzamlakActionPerformed(evt);
             }
         });
+        mTorzsadatok.add(miSzamlak);
 
-        btChangeRecord.setIcon(new javax.swing.ImageIcon(getClass().getResource("/Images/change.png"))); // NOI18N
-        btChangeRecord.setToolTipText("Módosítás");
-        btChangeRecord.setEnabled(false);
-        btChangeRecord.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btChangeRecordActionPerformed(evt);
-            }
-        });
+        menu.add(mTorzsadatok);
 
-        btDeleteRecord.setIcon(new javax.swing.ImageIcon(getClass().getResource("/Images/del.png"))); // NOI18N
-        btDeleteRecord.setToolTipText("Törlés");
-        btDeleteRecord.setEnabled(false);
-        btDeleteRecord.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btDeleteRecordActionPerformed(evt);
-            }
-        });
+        mBeallitasok.setMnemonic('b');
+        mBeallitasok.setText("Beállítások");
 
-        btRefresh.setIcon(new javax.swing.ImageIcon(getClass().getResource("/Images/refresh.png"))); // NOI18N
-        btRefresh.setToolTipText("Frissítés");
-        btRefresh.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btRefreshActionPerformed(evt);
-            }
-        });
+        jMenuItem3.setMnemonic('E');
+        jMenuItem3.setText("Ez legyen a kezdőoldal");
+        mBeallitasok.add(jMenuItem3);
+
+        jMenuItem4.setMnemonic('R');
+        jMenuItem4.setText("Üres kezdőoldal");
+        mBeallitasok.add(jMenuItem4);
+
+        menu.add(mBeallitasok);
+
+        setJMenuBar(menu);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addComponent(panMenu, javax.swing.GroupLayout.PREFERRED_SIZE, 154, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createSequentialGroup()
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(layout.createSequentialGroup()
-                                .addComponent(btAddNewRecord, javax.swing.GroupLayout.PREFERRED_SIZE, 46, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                .addComponent(btChangeRecord, javax.swing.GroupLayout.PREFERRED_SIZE, 42, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                .addComponent(btDeleteRecord, javax.swing.GroupLayout.PREFERRED_SIZE, 42, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                .addComponent(btRefresh, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))
-                            .addComponent(lbTableName, javax.swing.GroupLayout.PREFERRED_SIZE, 200, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 628, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addContainerGap())))
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(dynamicPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addContainerGap())
         );
-
-        layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {btAddNewRecord, btChangeRecord, btDeleteRecord, btRefresh});
-
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(panMenu, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-            .addGroup(layout.createSequentialGroup()
-                .addGap(7, 7, 7)
-                .addComponent(lbTableName, javax.swing.GroupLayout.PREFERRED_SIZE, 29, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addComponent(btChangeRecord, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(btDeleteRecord, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(btRefresh, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(btAddNewRecord))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 222, javax.swing.GroupLayout.PREFERRED_SIZE))
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(dynamicPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
-
-        layout.linkSize(javax.swing.SwingConstants.VERTICAL, new java.awt.Component[] {btChangeRecord, btDeleteRecord, btRefresh});
 
         pack();
         setLocationRelativeTo(null);
     }// </editor-fold>//GEN-END:initComponents
 
-    private void btPositionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btPositionActionPerformed
-                
-    }//GEN-LAST:event_btPositionActionPerformed
+    private void miTozsdekActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miTozsdekActionPerformed
+        setDynamicPanel(tozsdek);
+    }//GEN-LAST:event_miTozsdekActionPerformed
 
-    private void btExchangeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btExchangeActionPerformed
-        currentTable = 4;
-        tablazatFrissites();
-    }//GEN-LAST:event_btExchangeActionPerformed
+    private void miPenznemekActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miPenznemekActionPerformed
+        setDynamicPanel(penznemek);
+    }//GEN-LAST:event_miPenznemekActionPerformed
 
-    private void btCurrencyActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btCurrencyActionPerformed
-        currentTable = 2;
-        tablazatFrissites();
-    }//GEN-LAST:event_btCurrencyActionPerformed
+    private void miErtekpapirokActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miErtekpapirokActionPerformed
+        setDynamicPanel(ertekpapirok);
+    }//GEN-LAST:event_miErtekpapirokActionPerformed
 
-    private void btShareActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btShareActionPerformed
-        currentTable = 1;
-        tablazatFrissites();
-    }//GEN-LAST:event_btShareActionPerformed
+    private void miTipusokActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miTipusokActionPerformed
+        setDynamicPanel(tipusok);
+    }//GEN-LAST:event_miTipusokActionPerformed
 
-    private void btAccountActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btAccountActionPerformed
-        currentTable = 3;
-        tablazatFrissites();
-    }//GEN-LAST:event_btAccountActionPerformed
+    private void miSzamlakActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miSzamlakActionPerformed
+        setDynamicPanel(szamlak);
+    }//GEN-LAST:event_miSzamlakActionPerformed
 
-    private void btTypeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btTypeActionPerformed
-        currentTable = 0;
-        tablazatFrissites();
-    }//GEN-LAST:event_btTypeActionPerformed
+    private void jMenuItem1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem1ActionPerformed
+        setDynamicPanel(ugyletek);
+    }//GEN-LAST:event_jMenuItem1ActionPerformed
 
-    private void btAddNewRecordActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btAddNewRecordActionPerformed
-        NewMulti nm;
-        switch (currentTable) {
-            case 0:         //értékpapír típusok
-                nm = new NewMulti(0);
-                nm.setVisible(true);
-                break;
-            case 1:         //értékpapírok
-                NewShare ns = new NewShare();
-                ns.setVisible(true);
-                break;
-            case 2:         //pénznemek
-                nm = new NewMulti(2);
-                nm.setVisible(true);
-                break;
-            case 3:         //számlák
-                nm = new NewMulti(3);
-                nm.setVisible(true);
-                break;
-            case 4:         //tőzsdék
-                nm = new NewMulti(4);
-                nm.setVisible(true);
-                break;
-        }
-    }//GEN-LAST:event_btAddNewRecordActionPerformed
-
-    private void btDeleteRecordActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btDeleteRecordActionPerformed
-        // Törli az aktuálisan kijelölt sort
-        int y = selectionModel.getLeadSelectionIndex();
-        y = Integer.valueOf((String) table.getValueAt(y, 0));
-        if (0==JOptionPane.showConfirmDialog(this,"Biztos törölni akarja?" + System.lineSeparator() + y + ".azonosító számú rekord?","Megerősítés",0)) {
-                db.sqlTorol(Config.tablesNameSQL[currentTable], y);
-        } 
-        tablazatFrissites();
-    }//GEN-LAST:event_btDeleteRecordActionPerformed
-
-    private void btChangeRecordActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btChangeRecordActionPerformed
-        NewMulti nm;
-        int row = table.getSelectedRow();
-        int id = Integer.valueOf((String) table.getValueAt(selectionModel.getLeadSelectionIndex(), 0));
-        switch (currentTable) {
-            case 0:         //értékpapír típusok
-                nm = new NewMulti(0);
-                nm.loadData(table.getValueAt(row, 1).toString(), null, id);        
-                nm.setVisible(true);
-                break;
-            case 1:         //értékpapírok
-                NewShare ns = new NewShare();
-                String[] s = new String[6];
-                for (int i=0; i<6; i++){
-                    s[i] = table.getValueAt(row, i+1).toString();
-                }
-                ns.loadData(s, id);
-                ns.setVisible(true);
-                break;
-            case 2:         //pénznemek
-                nm = new NewMulti(2);
-                nm.loadData(table.getValueAt(row, 1).toString(),table.getValueAt(row, 2).toString(),id); 
-                nm.setVisible(true);
-                break;
-            case 3:         //számlák
-                nm = new NewMulti(3);
-                nm.loadData(table.getValueAt(row, 1).toString(), null, id); 
-                nm.setVisible(true);
-                break;
-            case 4:         //tőzsdék
-                nm = new NewMulti(4);
-                nm.loadData(table.getValueAt(row, 1).toString(),table.getValueAt(row, 2).toString(),id); 
-                nm.setVisible(true);
-                break;
-        }
-    }//GEN-LAST:event_btChangeRecordActionPerformed
-
-    private void btRefreshActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btRefreshActionPerformed
-        tablazatFrissites();
-    }//GEN-LAST:event_btRefreshActionPerformed
+    private void jMenuItem2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem2ActionPerformed
+        setDynamicPanel(kimutatas);
+    }//GEN-LAST:event_jMenuItem2ActionPerformed
 
     /**
      * @param args the command line arguments
@@ -424,27 +284,28 @@ public class ShareManager extends javax.swing.JFrame {
         });
     }
     
+    /**
+     * A LogIn-ból ezzel a metódussal "indul el" a program
+     */
     public static void stratShareManager(){
         mainWindow = new ShareManager();
         mainWindow.setVisible(true);
     }
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton btAccount;
-    private javax.swing.JButton btAddNewRecord;
-    private javax.swing.JButton btChangeRecord;
-    private javax.swing.JButton btCurrency;
-    private javax.swing.JButton btDeleteRecord;
-    private javax.swing.JButton btExchange;
-    private javax.swing.JButton btPosition;
-    private javax.swing.JButton btRefresh;
-    private javax.swing.JButton btShare;
-    private javax.swing.JButton btType;
-    private javax.swing.JLabel jLabel2;
-    private javax.swing.JLabel jLabel3;
-    private javax.swing.JScrollPane jScrollPane1;
-    private javax.swing.JLabel lbTableName;
-    private javax.swing.JPanel panMenu;
-    private javax.swing.JTable table;
+    private javax.swing.JPanel dynamicPanel;
+    private javax.swing.JMenuItem jMenuItem1;
+    private javax.swing.JMenuItem jMenuItem2;
+    private javax.swing.JMenuItem jMenuItem3;
+    private javax.swing.JMenuItem jMenuItem4;
+    private javax.swing.JMenu mBeallitasok;
+    private javax.swing.JMenu mTorzsadatok;
+    private javax.swing.JMenu mUgyletek;
+    private javax.swing.JMenuBar menu;
+    private javax.swing.JMenuItem miErtekpapirok;
+    private javax.swing.JMenuItem miPenznemek;
+    private javax.swing.JMenuItem miSzamlak;
+    private javax.swing.JMenuItem miTipusok;
+    private javax.swing.JMenuItem miTozsdek;
     // End of variables declaration//GEN-END:variables
 }

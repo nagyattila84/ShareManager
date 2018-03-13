@@ -6,89 +6,109 @@
 package ShareManager;
 
 import javax.swing.JComboBox;
+import javax.swing.JTable;
 
 /**
- *
  * @author opossum
- * 
- * alap beállítások
- * 
- * közös metódusok pl adat ellenőrzők
  */
 public class Config {
     final static String DBURL = "jdbc:mysql://localhost/shareman?useUnicode=true&characterEncoding=UTF-8";
     final static String DBNAME = "shareman";
     final static String USER = "root";
     final static String PASS = "";
-    static boolean FullScreen = false;  //teljes kpernyőssé teszi a ShareManager-t
+    static boolean FullScreen = false;  //teljes kpernyőssé teszi a ShareManager-t    
     
+    /**
+     * A paraméterben megadott combobox-ot feltölti a paraméterben megadott JTable elemeivel
+     * @param cbx - JComboBox 
+     * @param t - JTable 
+     */
+    public static void addItemToComboBox(JComboBox cbx, JTable t) {
+        cbx.removeAllItems();
+        for (int i=0; i<t.getRowCount(); i++) {
+            cbx.addItem(t.getValueAt(i, 1));
+        }  
+    }
     
-    //Adatbázis tábláinak eredeti és a programban megjelenő (ékezetes) nevi
-    final static String[] tablesNameSQL = {"ertekpapir_tipusok", "ertekpapirok", "penznemek", "szamlak", "tozsdek", "ugyletek"};
-    final static String[] tablesNameForm = {"Értékpapír típusok", "Értékpapírok", "Devizák", "Számlák", "Tőzsdék", "Ügyletek"};
-    
-    //Táblák eredeti és a programban megjelenő mezőnevei
-    final static String[][] fieldsNameSQLQuery = {{"id", "nev"},                    //értékpapír típusok
-        {"ertekpapirok.id", "ertekpapirok.nev", "ertekpapirok.ceg_nev", "tozsdek.nev", "ertekpapir_tipusok.nev", "isin_kod", "penznemek.nev"},  //értékpapírok
-        {"id", "nev", "teljes_nev"},                                           //pénznemek
-        {"id", "nev"},                                                         //számlák
-        {"id", "nev", "teljes_nev"},                                           //tozsdek
-        {}};                                                        //ügyletek
-    final static String[][] fieldsNameSQLUpdate = {{"id", "nev"},                    //értékpapír típusok
-        {"id", "nev", "ceg_nev", "tozsdeID", "tipusID", "isin_kod", "penznemID"},  //értékpapírok
-        {"id", "nev", "teljes_nev"},                                           //pénznemek
-        {"id", "nev"},                                                         //számlák
-        {"id", "nev", "teljes_nev"},                                           //tozsdek
-        {}};                                                        //ügyletek
-    final static String[][] fieldsNameForm = {{"Az", "Név"},
-        {"Az", "Név", "Cég név", "Tőzsde", "Típus", "ISIN kód", "Deviza"},
-        {"Az", "Név", "Teljes név"},
-        {"Az", "Név"},
-        {"Az", "Név", "Teljes név"},
-        {}}; //ügylet
-    final static String[] joins = {"",                    //értékpapír típusok
-        " JOIN tozsdek ON ertekpapirok.tozsdeID=tozsdek.id JOIN ertekpapir_tipusok ON ertekpapirok.tipusID=ertekpapir_tipusok.id JOIN penznemek ON ertekpapirok.penznemID=penznemek.id",  //értékpapírok
-        "",                                           //pénznemek
-        "",                                                         //számlák
-        "",                                           //tozsdek
-        ""}; //ügyletek
-    
-    
-    public static boolean checkDate(String date) throws ClassCastException { 
-    //ellenőrzi a megadott dátum formátumát és érvényességét 1900-2050
-    //elfogadható formátumok 2017/03/03  2017.03.03  2017-03-03 20170303
-
-        String c = ""; //split character
-        int year, month, day;
-        if (date.length()<6) return false;
-        if (date.indexOf('-')>=0) c = "-";
-        else if (date.indexOf('.')>=0) c = ".";
-        else if (date.indexOf('/')>=0) c = "/";
-        try {
-            if (!c.equals("")) {
-                String[] d = date.split(c);
-                year = Integer.parseInt(d[0]);
-                month = Integer.parseInt(d[1]);
-                day = Integer.parseInt(d[2]);
-            } else {
-                year = Integer.parseInt(date.substring(0, 4));
-                month = Integer.parseInt(date.substring(4, 6));
-                day = Integer.parseInt(date.substring(6));
-            }
-            if (year>1900 && year<2050 && month>0 && month<13 && day>0 && day<32) return true;
-            else return false;
-        } catch (ArrayIndexOutOfBoundsException | NumberFormatException e) {return false;}
+     /**
+     * A combobox-ot feltölti a JTable c oszlop elemeivel és a "Mind" elemmel
+     * @param cbx - JComboBox 
+     * @param t - JTable 
+     * @param c - int - oszlop index 
+     */
+    public static void addColumnAndAllToCBX(JComboBox cbx, JTable t, int c) {
+        cbx.removeAllItems();
+        cbx.addItem("Mind");
+        for (int i=0; i<t.getRowCount(); i++) {
+            cbx.addItem(t.getValueAt(i, c));
+        }  
     }
     
     /**
-     * A paraméterben megadott combobox-ot feltölti a paraméterben megadott String tömb elemeivel
+     * A combobox-ot feltölti a paraméterben megadott JTable elemeivel és a "Mind" elemmel
      * @param cbx - JComboBox 
-     * @param s - String[]
+     * @param s - String[] 
      */
-    public static void addItemToComboBox(JComboBox cbx, String[] s) {
-        for (String item : s) {
-            cbx.addItem(item);        
+    public static void addItemAndAllToComboBoxFromString(JComboBox cbx, String[] s) {
+        cbx.removeAllItems();
+        cbx.addItem("Mind");
+        for (int i=0; i<s.length; i++) {
+            cbx.addItem(s[i]);
+        }  
+        cbx.setSelectedIndex(0);
+    }
+    
+    /**
+     * A paraméterben megadott combobox-ot feltölti a JTable azon elemeivel,
+     * amelyek megfelelnek a szűrőnek
+     * @param cbx - JComboBox 
+     * @param t - JTable 
+     * @param filter - String
+     */
+    public static void addItemToComboBox(JComboBox cbx, JTable t, Object filter) {
+        cbx.removeAllItems();
+        for (int i=0; i<t.getRowCount(); i++) {
+            if (t.getValueAt(i, 3).equals(filter))
+                cbx.addItem(t.getValueAt(i, 1));
+        }  
+    }
+    
+    /**
+     * A megadott JTable-ben megkeresi a megadott Object-et és
+     * annak ID-jét (0.oszlopát) adja eredményül. Ha nincs találat -1.
+     * @param t - JTable
+     * @param o - Object
+     * @return - String
+     */
+    public static String getID(JTable t, Object o){
+        String s = "-1";
+        for (int i=0; i<t.getRowCount(); i++) {
+            if (t.getValueAt(i, 1).equals(o)){
+                s= t.getValueAt(i, 0).toString();
+                break;
+            }
         }
+        return s;
+    }
+    
+    /**
+     * A megadott JTable-ben megkeresi a megadott Object-et és
+     * annak a rekordnak egy megadott elemét adja eredményül.
+     * Ha nincs találat -1.
+     * @param t - JTable - tábla
+     * @param o - Object - keresett elem
+     * @param c - int - oszlop
+     * @return - String
+     */
+    public static String getObject(JTable t, Object o, int c){
+        String s = "-1";
+        for (int i=0; i<t.getRowCount(); i++) {
+            if (t.getValueAt(i, 1).equals(o)){
+                s= t.getValueAt(i, c).toString();
+                break;
+            }
+        }
+        return s;
     }
     
     public static void main(String[] args) {
