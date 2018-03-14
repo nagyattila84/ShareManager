@@ -5,13 +5,11 @@
  */
 package ShareManager;
 
-import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import javax.swing.JOptionPane;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
@@ -21,204 +19,27 @@ import javax.swing.table.DefaultTableModel;
  */
 public class DB {
     
-    /**
-     * Az SQL adatbázisban szereplő táblák vagy egy tábla mezőinek a neveit adja vissza
-     * @param x: 0 = a táblák neve (ebben az esetben a table paraméter tetszőleges)
-     *           1 = a tábla mezőinek a neve
-     * @param table: x=1 esetén a tábla neve, amelynek a mező neveit akarjuk lekérdezni
-     * @return egy String tömböt ad eredményül a táblák nevével
-     */
-    public String[] sqlTablakVagyMezokNeve(int x, String table) {
-        String lekerdezoParancs = "";
-        if (x==1) {
-            lekerdezoParancs = "SELECT `COLUMN_NAME` FROM `INFORMATION_SCHEMA`.`COLUMNS` " +
-                "WHERE `TABLE_SCHEMA`='" + Config.DBNAME + "' AND `TABLE_NAME`='" + table + "';";
-        } else if (x==0) {
-            lekerdezoParancs = "SHOW TABLES FROM " + Config.DBNAME;
-        }
-             
-        try (Connection kapcs = DriverManager.getConnection(Config.DBURL, Config.USER, Config.PASS);
-                PreparedStatement parancs = kapcs.prepareStatement(lekerdezoParancs);
-                ResultSet eredmeny = parancs.executeQuery()){
-            ArrayList<String> sList = new ArrayList<>();
-            int i = 0;
-            while (eredmeny.next()) {
-                String sor = eredmeny.getString(1);
-                sList.add(sor);
-            }
-            if (sList==null) return null; //ha nincs eredménye a lekérdezésnek null értéket ad és befejezi a metódust
-            String[] s = new String[sList.size()];
-            for (int j=0; j<sList.size(); j++) {
-                s[j]= sList.get(j);
-            }
-            return s;
-             
-        } catch (SQLException ex) {
-            System.out.println(ex.getMessage());
-            System.exit(1);
-        }
-        return null;
+    private String levag(String s, int i){
+        s = s.trim();
+        s = s.substring(0, i);
+        return s;
     }
     
     /**
-     * Az adatbázis (Config.BDName) tábláinak a nevét adja eredményül
-     * @return - String[] 
-     */
-    public String[] sqlTablakNeve(){
-        return sqlTablakVagyMezokNeve(0, "");
-    }
-    
-    /**
-     * A megadott tábla mezőinek a nevét adja eredményül
-     * @param s String - a tábla neve
-     * @return - String[]
-     */
-    public String[] sqlMezokNeve(String s){
-        return sqlTablakVagyMezokNeve(1, s);
-    }
-    
-    /**
-     * A megadot paraméterek szerint elkészíti az SQL paracsot és végrehajtja azt
-     * @param tabla - Az SQL tábla neve ahova az adatokat rögzíti
-     * @param mezok - A rekord változói. Az azonosítót magától adja. A többi adatot egy String tömbben kell megadni.
-     */
-    public void sqlInsertRow(String tabla, String[] mezok) {
-        
-        String s = "INSERT INTO " + tabla + " VALUES (?";       //az id helye
-        for (int i=0; i<mezok.length; i++) {                  //a String tömb helyei
-            s+=",?";
-        }
-        s+=");";                                                //lezárás
-        
-        try (java.sql.Connection kapcs = DriverManager.getConnection(Config.DBURL, Config.USER, Config.PASS)) {
-            PreparedStatement ekpar = kapcs.prepareStatement(s);            
-            ekpar.setString(1, null);                   //az id
-            for (int i=0; i<mezok.length; i++) {    //String tömb
-                ekpar.setString(i+2, mezok[i]);
-            }
-            ekpar.executeUpdate(); //ha egyet ad vissza akkor sikerül
-        } catch (SQLException ex) {
-            System.out.println(ex.getMessage());
-        }
-    }
-    
-    /**
-     * A megadot paraméterek szerint elkészíti az SQL paracsot és végrehajtja azt
-     * @param tabla - int - Az SQL tábla sorszáma, ahova az adatokat rögzíti
-     * @param id - int - A módosítandó rekord azonosítója
-     * @param data - String[] - Az új adatok
-     */
-    public void sqlUpdateRow(int tabla, int id, String[] data) {
-        
-        String[] columnsSQLName = Config.fieldsNameSQLUpdate[tabla];
-        String s = "UPDATE "+Config.tablesNameSQL[tabla]+" SET nev = ?";
-        for (int i=1; i<data.length; i++) { 
-            s+= ", " + columnsSQLName[i+1] + " = ? ";
-        }
-        s+=" WHERE " +Config.tablesNameSQL[tabla]+".id ="+id;
-        
-        try (java.sql.Connection kapcs = DriverManager.getConnection(Config.DBURL, Config.USER, Config.PASS)) {
-            PreparedStatement ekpar = kapcs.prepareStatement(s);            
-            //ekpar.setString(1, null);                   //az id
-            for (int i=0; i<data.length; i++) {    //String tömb
-                ekpar.setString(i+1, data[i]);
-            }
-            ekpar.executeUpdate(); //ha egyet ad vissza akkor sikerül
-        } catch (SQLException ex) {
-            System.out.println(s);
-            System.out.println(ex.getMessage());
-        }
-    }
-    
-    /**
-     * A megadott táblából a keresett érték azonosító számát adja eredményül
-     * @param table - int - az SQL tábla sorszáma
-     * @param s - String - a keresett érték (szöveg)
-     * @return - String - a keresett érték azonosító száma
-     */
-    public String sqlBeolvasMezot(int table, String s){
-        String lekerdezoParancs = "SELECT id FROM " + Config.tablesNameSQL[table] + " WHERE nev = '" + s + "'";
-        String er = "";
-        
-        try (Connection kapcs = DriverManager.getConnection(Config.DBURL, Config.USER, Config.PASS);
-                PreparedStatement parancs = kapcs.prepareStatement(lekerdezoParancs);
-                ResultSet eredmeny = parancs.executeQuery()){
-            while (eredmeny.next()) {
-                er = eredmeny.getString(1);
-            }
-            return er;
-        } catch (SQLException ex) {
-            JOptionPane.showMessageDialog(null, ex.getMessage());
-        }
-        return null;
-    }
-    
-    /**
-     * Az adott tábla első oszlopát adja eredményül egy String típusú tömbben 
-     * @param tabla a beolvasandó tábla
-     * @return 
-     */
-    public String[] sqlBeolvasOszlopot(String tabla) {
-        
-        String lekerdezoParancs = "SELECT nev FROM " + tabla;
-        ArrayList<String> sList = new ArrayList<>();
-        int i = 0;
-         
-        try (Connection kapcs = DriverManager.getConnection(Config.DBURL, Config.USER, Config.PASS);
-                PreparedStatement parancs = kapcs.prepareStatement(lekerdezoParancs);
-                ResultSet eredmeny = parancs.executeQuery()){
-            while (eredmeny.next()) {
-                String sor = 
-                    eredmeny.getString(1)
-//                    eredmeny.getString("ido"),
-//                    eredmeny.getString("nev"),
-//                    eredmeny.getString("allapot"),
-//                    eredmeny.getString("osztaly"),
-//                    eredmeny.getString("iskola"),
-                ;
-                sList.add(sor);
-            }
-            if (sList==null) return null; //ha nincs eredménye a lekérdezésnek null értéket ad és befejezi a metódust
-            String[] s = new String[sList.size()];
-            for (int j=0; j<sList.size(); j++) {
-                s[j]= sList.get(j);
-            }
-            return s;
-             
-        } catch (SQLException ex) {
-            JOptionPane.showMessageDialog(null, ex.getMessage());
-        }
-        return null;
-    }
-
-    
-    /**
-     * A megadott SQL mezőket lekéri egy megadott JAVA JTable-be
-     * @param table - JTable - a JTable, ahová betölti az adatokat
-     * @param currentTable - int - a tábla sorszáma
-     */
-    public void sqlBeolvasTablat(JTable table, int currentTable) {
+    * A tőzsdék táblából beolvassa az adatokat
+    * @param table - JTable - a JTable, ahová betölti az adatokat
+    */
+    public void sqlLekerdezTozsdek(JTable table) {
         DefaultTableModel tm = (DefaultTableModel)table.getModel();
-        String[] param = Config.fieldsNameSQLQuery[currentTable];
-        tm.setColumnCount(param.length);
-        tm.setColumnIdentifiers(param);
         
-        String s = "SELECT " + param[0];
-        for (int i=1; i<param.length; i++) {
-            s+= ", " + param[i] ;
-        }
-        s+= " FROM " + Config.tablesNameSQL[currentTable];
-        s+= Config.joins[currentTable];
+        String s = "SELECT * FROM tozsdek";
          
         try (Connection kapcs = DriverManager.getConnection(Config.DBURL, Config.USER, Config.PASS);
                 PreparedStatement parancs = kapcs.prepareStatement(s);
                 ResultSet eredmeny = parancs.executeQuery()){
             tm.setRowCount(0);
-            Object[] sor = new Object[param.length];
             while (eredmeny.next()) {
-                for (int i=0; i<param.length; i++) {
-                    sor[i] = eredmeny.getString(param[i]);
-                };
+                String[] sor = {eredmeny.getString("tozsde_id"), eredmeny.getString("nev"),  eredmeny.getString("teljes_nev")};
                 tm.addRow(sor);
             }
              
@@ -226,7 +47,424 @@ public class DB {
             System.out.println(s);
             System.out.println(ex.getMessage());
         } 
-    }    
+    }
+    /**
+     * Egy új tőzsdét ad a tőzsdék táblához
+     * @param s1 - String - a rövid név
+     * @param s2 - String - a teljes név
+     */
+    public void sqlUjTozsde(String s1, String s2) {
+        
+        String s = "INSERT INTO tozsdek VALUES (?,?,?);";
+        
+        try (java.sql.Connection kapcs = DriverManager.getConnection(Config.DBURL, Config.USER, Config.PASS)) {
+            PreparedStatement ekpar = kapcs.prepareStatement(s);            
+            ekpar.setString(1, null);                 
+            ekpar.setString(2, s1);                   
+            ekpar.setString(3, s2);                   
+            ekpar.executeUpdate(); //ha egyet ad vissza akkor sikerül
+        } catch (SQLException ex) {
+            System.out.println(s);
+            System.out.println(ex.getMessage());
+        }
+    }
+    /**
+    * A kijelölt pénznem adatait módosítja
+    * @param id - int - a pénznem id-ja
+    * @param s1 - String - rövid név
+    * @param s2 - String - teljes név
+    */
+    public void sqlModositTozsde(int id, String s1, String s2) {
+        
+        String s = "UPDATE tozsdek SET nev = ?, teljes_nev = ? WHERE tozsde_id = "+id;
+        
+        try (java.sql.Connection kapcs = DriverManager.getConnection(Config.DBURL, Config.USER, Config.PASS)) {
+            PreparedStatement ekpar = kapcs.prepareStatement(s);            
+            ekpar.setString(1, s1);
+            ekpar.setString(2, s2);
+            ekpar.executeUpdate(); //ha egyet ad vissza akkor sikerül
+        } catch (SQLException ex) {
+            System.out.println(s);
+            System.out.println(ex.getMessage());
+        }
+    }
+    
+    /**
+     * A típusok táblából beolvassa az adatokat
+     * @param table - JTable - a JTable, ahová betölti az adatokat
+     */
+    public void sqlLekerdezTipusok(JTable table) {
+        DefaultTableModel tm = (DefaultTableModel)table.getModel();
+        
+        String s = "SELECT * FROM tipusok";
+         
+        try (Connection kapcs = DriverManager.getConnection(Config.DBURL, Config.USER, Config.PASS);
+                PreparedStatement parancs = kapcs.prepareStatement(s);
+                ResultSet eredmeny = parancs.executeQuery()){
+            tm.setRowCount(0);
+            while (eredmeny.next()) {
+                String[] sor = {eredmeny.getString("tipus_id"),
+                                eredmeny.getString("nev")};
+                tm.addRow(sor);
+            }  
+        } catch (SQLException ex) {
+            System.out.println(s);
+            System.out.println(ex.getMessage());
+        } 
+    }
+    /**
+    * Egy új típust ad a típusok táblához
+    * @param s1 - String - a rövid név
+    */
+    public void sqlUjTipus(String s1) {
+        String s = "INSERT INTO tipusok VALUES (?,?);";
+        try (java.sql.Connection kapcs = DriverManager.getConnection(Config.DBURL, Config.USER, Config.PASS)) {
+            PreparedStatement ekpar = kapcs.prepareStatement(s);            
+            ekpar.setString(1, null);                 
+            ekpar.setString(2, s1);                 
+            ekpar.executeUpdate(); //ha egyet ad vissza akkor sikerül
+        } catch (SQLException ex) {
+            System.out.println(s);
+            System.out.println(ex.getMessage());
+        }
+    }
+    /**
+     * A kijelölt típus adatait módosítja
+     * @param id - int - a pénznem id-ja
+     * @param s1 - String - rövid név
+     */
+    public void sqlModositTipus(int id, String s1) {
+        String s = "UPDATE tipusok SET nev = ? WHERE tipus_id = "+id;
+        try (java.sql.Connection kapcs = DriverManager.getConnection(Config.DBURL, Config.USER, Config.PASS)) {
+            PreparedStatement ekpar = kapcs.prepareStatement(s);            
+            ekpar.setString(1, s1);
+            ekpar.executeUpdate(); //ha egyet ad vissza akkor sikerül
+        } catch (SQLException ex) {
+            System.out.println(s);
+            System.out.println(ex.getMessage());
+        }
+    }
+    
+    /**
+     * A pénznemek táblából beolvassa az adatokat
+     * @param table - JTable - a JTable, ahová betölti az adatokat
+     */
+    public void sqlLekerdezPenznemek(JTable table) {
+        DefaultTableModel tm = (DefaultTableModel)table.getModel();
+       
+        String s = "SELECT * FROM penznemek";
+         
+        try (Connection kapcs = DriverManager.getConnection(Config.DBURL, Config.USER, Config.PASS);
+                PreparedStatement parancs = kapcs.prepareStatement(s);
+                ResultSet eredmeny = parancs.executeQuery()){
+            tm.setRowCount(0);
+            while (eredmeny.next()) {
+                String[] sor = {eredmeny.getString("penznem_id"), eredmeny.getString("nev"),  eredmeny.getString("teljes_nev")};
+                tm.addRow(sor);
+            }
+             
+        } catch (SQLException ex) {
+            System.out.println(s);
+            System.out.println(ex.getMessage());
+        } 
+    }
+    /**
+    * Egy új pénznemet ad a pénznemek táblához
+    * @param s1 - String - a rövid név
+    * @param s2 - String - a teljes név
+    */
+    public void sqlUjPenznem(String s1, String s2) {
+        
+        String s = "INSERT INTO penznemek VALUES (?,?,?);";
+        
+        try (java.sql.Connection kapcs = DriverManager.getConnection(Config.DBURL, Config.USER, Config.PASS)) {
+            PreparedStatement ekpar = kapcs.prepareStatement(s);            
+            ekpar.setString(1, null);                 
+            ekpar.setString(2, s1);                   
+            ekpar.setString(3, s2);                   
+            ekpar.executeUpdate(); //ha egyet ad vissza akkor sikerül
+        } catch (SQLException ex) {
+            System.out.println(s);
+            System.out.println(ex.getMessage());
+        }
+    }
+    /**
+     * A kijelölt pénznem adatait módosítja
+     * @param id - int - a pénznem id-ja
+     * @param s1 - String - rövid név
+     * @param s2 - String - teljes név
+     */
+    public void sqlModositPenznem(int id, String s1, String s2) {
+        
+        String s = "UPDATE penznemek SET nev = ?, teljes_nev = ? WHERE penznem_id = "+id;
+        
+        try (java.sql.Connection kapcs = DriverManager.getConnection(Config.DBURL, Config.USER, Config.PASS)) {
+            PreparedStatement ekpar = kapcs.prepareStatement(s);            
+            ekpar.setString(1, s1);
+            ekpar.setString(2, s2);
+            ekpar.executeUpdate(); //ha egyet ad vissza akkor sikerül
+        } catch (SQLException ex) {
+            System.out.println(s);
+            System.out.println(ex.getMessage());
+        }
+    }
+    
+    
+    /**
+     * A számlák táblából beolvassa az adatokat
+     * @param table - JTable - a JTable, ahová betölti az adatokat
+     */
+    public void sqlLekerdezSzamlak(JTable table) {
+        DefaultTableModel tm = (DefaultTableModel)table.getModel();
+        
+        String s = "SELECT * FROM szamlak";
+         
+        try (Connection kapcs = DriverManager.getConnection(Config.DBURL, Config.USER, Config.PASS);
+                PreparedStatement parancs = kapcs.prepareStatement(s);
+                ResultSet eredmeny = parancs.executeQuery()){
+            tm.setRowCount(0);
+            while (eredmeny.next()) {
+                String[] sor = {eredmeny.getString("szamla_id"),
+                                eredmeny.getString("nev"),
+                                eredmeny.getString("adomentes")};
+                tm.addRow(sor);
+            }  
+        } catch (SQLException ex) {
+            System.out.println(s);
+            System.out.println(ex.getMessage());
+        } 
+    }
+    /**
+     * Egy új számlát ad a számlák táblához
+     * @param s1 - String - a rövid név
+     * @param s2 - String - adómentes-e 0-nem, 1-igen
+     */
+    public void sqlUjSzamla(String s1, String s2) {
+        String s = "INSERT INTO szamlak VALUES (?,?,?);";
+        try (java.sql.Connection kapcs = DriverManager.getConnection(Config.DBURL, Config.USER, Config.PASS)) {
+            PreparedStatement ekpar = kapcs.prepareStatement(s);            
+            ekpar.setString(1, null);                 
+            ekpar.setString(2, s1);                 
+            ekpar.setString(3, s2);                 
+            ekpar.executeUpdate(); //ha egyet ad vissza akkor sikerül
+        } catch (SQLException ex) {
+            System.out.println(s);
+            System.out.println(ex.getMessage());
+        }
+    }
+    /**
+    * A kijelölt számla adatait módosítja
+    * @param id - int - a pénznem id-ja
+    * @param s1 - String - rövid név
+    * @param s2 - String - adómentes, 0-nem, 1-igen
+    */
+    public void sqlModositSzamla(int id, String s1, String s2) {
+        String s = "UPDATE szamlak SET nev = ?, adomentes = ? WHERE szamla_id = "+id;
+        try (java.sql.Connection kapcs = DriverManager.getConnection(Config.DBURL, Config.USER, Config.PASS)) {
+            PreparedStatement ekpar = kapcs.prepareStatement(s);            
+            ekpar.setString(1, s1);
+            ekpar.setString(2, s2);
+            ekpar.executeUpdate(); //ha egyet ad vissza akkor sikerül
+        } catch (SQLException ex) {
+            System.out.println(s);
+            System.out.println(ex.getMessage());
+        }
+    }
+    
+    /**
+     * Az értékpapírok táblából beolvassa az adatokat
+     * @param table - JTable - a JTable, ahová betölti az adatokat
+     */
+    public void sqlLekerdezErtekpapirok(JTable table) {
+        DefaultTableModel tm = (DefaultTableModel)table.getModel();
+        
+        String s = "SELECT ertekpapir_id, ticker, ceg_nev, tozsdek.nev, tipusok.nev, isin, penznemek.nev FROM ertekpapirok " +
+                "JOIN tozsdek ON ertekpapirok.tozsde_id=tozsdek.tozsde_id " +
+                "JOIN tipusok ON ertekpapirok.tipus_id=tipusok.tipus_id " +
+                "JOIN penznemek ON ertekpapirok.penznem_id=penznemek.penznem_id";
+         
+        try (Connection kapcs = DriverManager.getConnection(Config.DBURL, Config.USER, Config.PASS);
+                PreparedStatement parancs = kapcs.prepareStatement(s);
+                ResultSet eredmeny = parancs.executeQuery()){
+            tm.setRowCount(0);
+            while (eredmeny.next()) {
+                String[] sor = {eredmeny.getString("ertekpapir_id"),
+                                eredmeny.getString("ticker"),  
+                                eredmeny.getString("ceg_nev"),
+                                eredmeny.getString("tozsdek.nev"),
+                                eredmeny.getString("tipusok.nev"),
+                                eredmeny.getString("isin"),
+                                eredmeny.getString("penznemek.nev")};
+                tm.addRow(sor);
+            }
+             
+        } catch (SQLException ex) {
+            System.out.println(s);
+            System.out.println(ex.getMessage());
+        } 
+    }
+    /**
+     * Egy új értékpapírt ad az értékpapírok táblához
+     * @param s
+     */
+    public void sqlUjErtekpapir(String[] s) {
+        
+        String p = "INSERT INTO ertekpapirok VALUES (?,?,?,?,?,?,?);";
+        
+        try (java.sql.Connection kapcs = DriverManager.getConnection(Config.DBURL, Config.USER, Config.PASS)) {
+            PreparedStatement ekpar = kapcs.prepareStatement(p);            
+            ekpar.setString(1, null);     
+            for (int i=0; i<6; i++) {
+                ekpar.setString(i+2, s[i]);                   
+            }              
+            ekpar.executeUpdate(); //ha egyet ad vissza akkor sikerül
+        } catch (SQLException ex) {
+            System.out.println(p);
+            System.out.println(ex.getMessage());
+        }
+    }
+    /**
+    * A kijelölt értékpapír adatait módosítja
+    * @param id - int - az értékpapír id-ja
+    * @param s - String[]
+    */
+    public void sqlModositErtekpapir(int id, String s[]) {
+        String p = "UPDATE ertekpapirok SET ticker = ?, ceg_nev = ?, tozsde_id = ?, tipus_id = ?, "+
+                "isin = ?, penznem_id = ? WHERE ertekpapir_id = "+id;
+        try (java.sql.Connection kapcs = DriverManager.getConnection(Config.DBURL, Config.USER, Config.PASS)) {
+            PreparedStatement ekpar = kapcs.prepareStatement(p);            
+            for (int i=0; i<6; i++) {
+                ekpar.setString(i+1, s[i]);
+            }
+            ekpar.executeUpdate(); //ha egyet ad vissza akkor sikerül
+        } catch (SQLException ex) {
+            System.out.println(p);
+            System.out.println(ex.getMessage());
+        }
+    }
+    
+
+    /**
+     * Az ügyletek táblából beolvassa az adatokat
+     * @param table - JTable - a JTable, ahová betölti az adatokat
+     */
+    public void sqlLekerdezUgyletek(JTable table) {
+        DefaultTableModel tm = (DefaultTableModel)table.getModel();
+        
+        String s = "SELECT ugylet_id, ertekpapirok.ticker, szamlak.nev, mennyiseg, arfolyam, datum, jutalek, dev_arfolyam FROM ugyletek " +
+                "JOIN ertekpapirok ON ugyletek.ertekpapir_id=ertekpapirok.ertekpapir_id " +
+                "JOIN szamlak ON ugyletek.szamla_id=szamlak.szamla_id";
+         
+        try (Connection kapcs = DriverManager.getConnection(Config.DBURL, Config.USER, Config.PASS);
+                PreparedStatement parancs = kapcs.prepareStatement(s);
+                ResultSet eredmeny = parancs.executeQuery()){
+            tm.setRowCount(0);
+            while (eredmeny.next()) {
+                String[] sor = {eredmeny.getString("ugylet_id"),
+                                eredmeny.getString("ertekpapirok.ticker"),  
+                                eredmeny.getString("szamlak.nev"),
+                                eredmeny.getString("mennyiseg"),
+                                eredmeny.getString("arfolyam"),
+                                eredmeny.getString("datum"),
+                                eredmeny.getString("jutalek"),
+                                eredmeny.getString("dev_arfolyam")};
+                tm.addRow(sor);
+            }
+             
+        } catch (SQLException ex) {
+            System.out.println(s);
+            System.out.println(ex.getMessage());
+        } 
+    }
+    /**
+     * Egy új ügyletet ad az ügyletek táblához
+     * @param s
+     */
+    public void sqlUjUgylet(String[] s) {
+        
+        String p = "INSERT INTO ugyletek VALUES (?,?,?,?,?,?,?,?);";
+        
+        try (java.sql.Connection kapcs = DriverManager.getConnection(Config.DBURL, Config.USER, Config.PASS)) {
+            PreparedStatement ekpar = kapcs.prepareStatement(p);            
+            ekpar.setString(1, null);            
+            for (int i=0; i<7; i++) {
+                ekpar.setString(i+2, s[i]);                   
+            }              
+            ekpar.executeUpdate(); //ha egyet ad vissza akkor sikerül
+        } catch (SQLException ex) {
+            System.out.println(p);
+            System.out.println(ex.getMessage());
+        }
+    }
+    /**
+    * A kijelölt ügylet adatait módosítja
+    * @param id - int - az ügylet id-ja
+    * @param s - String[]
+    */
+    public void sqlModositUgylet(int id, String s[]) {
+        String p = "UPDATE ugyletek SET ugyletek.ertekpapir_id = ?, ugyletek.szamla_id = ?, mennyiseg = ?, arfolyam = ?, "+
+                "datum = ?, jutalek = ?, dev_arfolyam = ? WHERE ugylet_id = "+id;
+        try (java.sql.Connection kapcs = DriverManager.getConnection(Config.DBURL, Config.USER, Config.PASS)) {
+            PreparedStatement ekpar = kapcs.prepareStatement(p);            
+            for (int i=0; i<7; i++) {
+                ekpar.setString(i+1, s[i]);
+            }
+            ekpar.executeUpdate(); //ha egyet ad vissza akkor sikerül
+        } catch (SQLException ex) {
+            System.out.println(p);
+            System.out.println(ex.getMessage());
+        }
+    }
+    
+    /**
+     * Az ügyletek táblából beolvassa az adatokat a kimutatáshoz, a paraméterben megadott szűrők alkalmazásával
+     * @param table - JTable - a JTable, ahová betölti az adatokat
+     * @param account - String - a számla (Mind esetén nem szűr rá)
+     * @param share - String - a értékpapír (Mind esetén nem szűr rá)
+     * @param d1 - String - dátumtól
+     * @param d2 - String - dátumig
+     */
+    public void sqlLekerdezKimutatas(JTable table, String account, String share, String d1, String d2) {
+        DefaultTableModel tm = (DefaultTableModel)table.getModel();
+        
+        String s = "SELECT ugylet_id, ertekpapirok.ticker, szamlak.nev, mennyiseg, arfolyam, datum, jutalek, dev_arfolyam FROM ugyletek " +
+                "JOIN ertekpapirok ON ugyletek.ertekpapir_id=ertekpapirok.ertekpapir_id " +
+                "JOIN szamlak ON ugyletek.szamla_id=szamlak.szamla_id";
+        
+        if (!account.equals("Mind")) {
+            s += " WHERE szamlak.nev = '" + account + "'";
+        }
+        
+        if (!share.equals("Mind")) {
+            s += " AND ertekpapirok.ticker = '" + share + "'";
+        }
+        
+        if (!d1.equals("Mind")) {
+            s += " AND datum >= '" + d1 + "'";
+            s += " AND datum <= '" + d2 + "'";
+        }
+        
+        try (Connection kapcs = DriverManager.getConnection(Config.DBURL, Config.USER, Config.PASS);
+                PreparedStatement parancs = kapcs.prepareStatement(s);
+                ResultSet eredmeny = parancs.executeQuery()){
+            tm.setRowCount(0);
+            while (eredmeny.next()) {
+                String[] sor = {eredmeny.getString("ugylet_id"),
+                                eredmeny.getString("szamlak.nev"),
+                                eredmeny.getString("datum"),
+                                eredmeny.getString("ertekpapirok.ticker"),  
+                                eredmeny.getString("mennyiseg"),
+                                eredmeny.getString("arfolyam"),
+                                eredmeny.getString("jutalek"),
+                                eredmeny.getString("dev_arfolyam")};
+                tm.addRow(sor);
+            }
+             
+        } catch (SQLException ex) {
+            System.out.println(s);
+            System.out.println(ex.getMessage());
+        } 
+    }
     
     /**
      * A paraméterben megadott táblából törli a megadott azonosító számú sort
@@ -234,7 +472,10 @@ public class DB {
      * @param id int - a sor (rekord) azonosító száma
      */
     public void sqlTorol(String sqlTable, int id) {
-        String s = "DELETE FROM " + sqlTable +" WHERE " + sqlTable + ".id = '" + id + "'";
+        String t;
+        if (sqlTable.equals("szamlak") || sqlTable.equals("tozsdek")) t =sqlTable.substring(0, sqlTable.length()-1);
+        else t = sqlTable.substring(0,sqlTable.length()-2);
+        String s = "DELETE FROM " + sqlTable +" WHERE " + t + "_id = '" + id + "'";
         try (Connection kapcs = DriverManager.getConnection(Config.DBURL, Config.USER, Config.PASS);
                 PreparedStatement parancs = kapcs.prepareStatement(s)) {
             parancs.executeUpdate(s);
@@ -273,9 +514,4 @@ public class DB {
 //        return "SELECT felhasznalo, iskola, osztaly, nev, ido, allapot "
 //                + "FROM gepek WHERE" + q + " ORDER BY ido DESC";
 //    }
-    
-    public static void main(String[] args) throws IOException {
-        DB db = new DB();
-        System.out.println(db.sqlBeolvasMezot(4, "BET"));
-    }
 }
