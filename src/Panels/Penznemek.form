@@ -107,7 +107,7 @@
           <Properties>
             <Property name="autoCreateRowSorter" type="boolean" value="true"/>
             <Property name="model" type="javax.swing.table.TableModel" editor="org.netbeans.modules.form.editors2.TableModelEditor">
-              <Table columnCount="3" rowCount="4">
+              <Table columnCount="3" rowCount="1">
                 <Column editable="false" title="P&#xe9;nznem ID" type="java.lang.Integer"/>
                 <Column editable="false" title="R&#xf6;vid n&#xe9;v" type="java.lang.Object"/>
                 <Column editable="false" title="Teljes n&#xe9;v" type="java.lang.Object"/>
@@ -132,6 +132,9 @@
                 </Column>
               </TableColumnModel>
             </Property>
+            <Property name="nextFocusableComponent" type="java.awt.Component" editor="org.netbeans.modules.form.ComponentChooserEditor">
+              <ComponentRef name="txtRovidNev"/>
+            </Property>
             <Property name="tableHeader" type="javax.swing.table.JTableHeader" editor="org.netbeans.modules.form.editors2.JTableHeaderEditor">
               <TableHeader reorderingAllowed="true" resizingAllowed="true"/>
             </Property>
@@ -153,11 +156,21 @@
       </Properties>
     </Component>
     <Component class="javax.swing.JTextField" name="txtRovidNev">
+      <Properties>
+        <Property name="nextFocusableComponent" type="java.awt.Component" editor="org.netbeans.modules.form.ComponentChooserEditor">
+          <ComponentRef name="txtTeljesNev"/>
+        </Property>
+      </Properties>
       <Events>
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="txtRovidNevActionPerformed"/>
       </Events>
     </Component>
     <Component class="javax.swing.JTextField" name="txtTeljesNev">
+      <Properties>
+        <Property name="nextFocusableComponent" type="java.awt.Component" editor="org.netbeans.modules.form.ComponentChooserEditor">
+          <ComponentRef name="btAdd"/>
+        </Property>
+      </Properties>
       <Events>
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="txtTeljesNevActionPerformed"/>
       </Events>
@@ -168,6 +181,10 @@
           <Image iconType="3" name="/Images/013-add.png"/>
         </Property>
         <Property name="toolTipText" type="java.lang.String" value="Hozz&#xe1;ad"/>
+        <Property name="enabled" type="boolean" value="false"/>
+        <Property name="nextFocusableComponent" type="java.awt.Component" editor="org.netbeans.modules.form.ComponentChooserEditor">
+          <ComponentRef name="btUpdate"/>
+        </Property>
       </Properties>
       <Events>
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btAddActionPerformed"/>
@@ -180,6 +197,9 @@
         </Property>
         <Property name="toolTipText" type="java.lang.String" value="M&#xf3;dos&#xed;t"/>
         <Property name="enabled" type="boolean" value="false"/>
+        <Property name="nextFocusableComponent" type="java.awt.Component" editor="org.netbeans.modules.form.ComponentChooserEditor">
+          <ComponentRef name="btDel"/>
+        </Property>
       </Properties>
       <Events>
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btUpdateActionPerformed"/>
@@ -192,6 +212,9 @@
         </Property>
         <Property name="toolTipText" type="java.lang.String" value="T&#xf6;r&#xf6;l"/>
         <Property name="enabled" type="boolean" value="false"/>
+        <Property name="nextFocusableComponent" type="java.awt.Component" editor="org.netbeans.modules.form.ComponentChooserEditor">
+          <ComponentRef name="txtRovidNev"/>
+        </Property>
       </Properties>
       <Events>
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btDelActionPerformed"/>

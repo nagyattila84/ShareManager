@@ -5,6 +5,8 @@
  */
 package Panels;
 
+import static Panels.Ertekpapirok.tbErtekpapirok;
+import ShareManager.Config;
 import ShareManager.DB;
 import javax.swing.ListSelectionModel;
 import javax.swing.event.ListSelectionEvent;
@@ -22,6 +24,12 @@ public class Penznemek extends Panel {
     public Penznemek() {
         initComponents();
         frissites();
+        Config.textFieldUpper(txtRovidNev);
+        Config.textFieldLimit(txtRovidNev, 5);
+        Config.textFieldLimit(txtTeljesNev, 30);
+        Config.textFieldPopup(txtRovidNev);
+        Config.textFieldPopup(txtTeljesNev);
+        Config.uniqueTextListener(txtRovidNev, tbPenznemek, btAdd, btUpdate);
     }
     
     public void frissites(){
@@ -39,7 +47,9 @@ public class Penznemek extends Panel {
                     btUpdate.setEnabled(true);
                     btDel.setEnabled(true);
                     int i = selectionModel.getMinSelectionIndex();
-                    txtRovidNev.setText(tbPenznemek.getValueAt(i, 1).toString());
+                    if (!tbPenznemek.getValueAt(i, 1).equals(txtRovidNev.getText())){
+                        txtRovidNev.setText(tbPenznemek.getValueAt(i, 1).toString());
+                    } else btAdd.setEnabled(false);
                     txtTeljesNev.setText(tbPenznemek.getValueAt(i, 2).toString());
                 } else {
                     btUpdate.setEnabled(false);
@@ -78,9 +88,6 @@ public class Penznemek extends Panel {
         tbPenznemek.setAutoCreateRowSorter(true);
         tbPenznemek.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                {null, null, null},
-                {null, null, null},
-                {null, null, null},
                 {null, null, null}
             },
             new String [] {
@@ -102,6 +109,7 @@ public class Penznemek extends Panel {
                 return canEdit [columnIndex];
             }
         });
+        tbPenznemek.setNextFocusableComponent(txtRovidNev);
         jScrollPane1.setViewportView(tbPenznemek);
         if (tbPenznemek.getColumnModel().getColumnCount() > 0) {
             tbPenznemek.getColumnModel().getColumn(0).setMinWidth(0);
@@ -114,12 +122,14 @@ public class Penznemek extends Panel {
 
         jLabel3.setText("Teljes név");
 
+        txtRovidNev.setNextFocusableComponent(txtTeljesNev);
         txtRovidNev.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 txtRovidNevActionPerformed(evt);
             }
         });
 
+        txtTeljesNev.setNextFocusableComponent(btAdd);
         txtTeljesNev.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 txtTeljesNevActionPerformed(evt);
@@ -128,6 +138,8 @@ public class Penznemek extends Panel {
 
         btAdd.setIcon(new javax.swing.ImageIcon(getClass().getResource("/Images/013-add.png"))); // NOI18N
         btAdd.setToolTipText("Hozzáad");
+        btAdd.setEnabled(false);
+        btAdd.setNextFocusableComponent(btUpdate);
         btAdd.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btAddActionPerformed(evt);
@@ -137,6 +149,7 @@ public class Penznemek extends Panel {
         btUpdate.setIcon(new javax.swing.ImageIcon(getClass().getResource("/Images/010-draw.png"))); // NOI18N
         btUpdate.setToolTipText("Módosít");
         btUpdate.setEnabled(false);
+        btUpdate.setNextFocusableComponent(btDel);
         btUpdate.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btUpdateActionPerformed(evt);
@@ -146,6 +159,7 @@ public class Penznemek extends Panel {
         btDel.setIcon(new javax.swing.ImageIcon(getClass().getResource("/Images/012-delete.png"))); // NOI18N
         btDel.setToolTipText("Töröl");
         btDel.setEnabled(false);
+        btDel.setNextFocusableComponent(txtRovidNev);
         btDel.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btDelActionPerformed(evt);
@@ -226,11 +240,12 @@ public class Penznemek extends Panel {
     }//GEN-LAST:event_btAddActionPerformed
 
     private void btUpdateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btUpdateActionPerformed
-        if (txtRovidNev.getText().isEmpty()) return;
         int id = Integer.parseInt(tbPenznemek.getValueAt(selectionModel.getMinSelectionIndex(), 0).toString());
+        int r = selectionModel.getMinSelectionIndex();
         DB db = new DB();
         db.sqlModositPenznem(id, txtRovidNev.getText(), txtTeljesNev.getText());
         frissites();
+        tbPenznemek.setRowSelectionInterval(r, r);
     }//GEN-LAST:event_btUpdateActionPerformed
 
     private void btDelActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btDelActionPerformed
